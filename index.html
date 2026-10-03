@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>안부 기록장 — 방문 일지 문단 만들기</title>
+<meta name="description" content="노인맞춤돌봄 방문 후 고른 내용으로 두괄식 결과 문단을 만드는 일지 도우미">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📒</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+ --paper:#F4F7F3; --sheet:#FBFCFA; --ink:#20262A; --ink2:#55606A; --pen:#2446A3; --pen-soft:#E3E9F7;
+ --rule:#CCD9C8; --rule2:#E2EBDF; --attn:#9A5B00; --attn-bg:#FBF0DC; --risk:#B0234B; --risk-bg:#FBE6EC; --mark:#FFEF9A;
+ --ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ --doc:"Gowun Batang","AppleMyungjo","Batang","Noto Serif KR",serif;
+ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+ :root:not([data-theme="light"]){--paper:#15191B;--sheet:#1C2124;--ink:#E7ECE9;--ink2:#A3AEB4;--pen:#8FA9F0;--pen-soft:#22305A;--rule:#33403A;--rule2:#283230;--attn:#E6B25C;--attn-bg:#3A2F17;--risk:#F2839E;--risk-bg:#40202A;--mark:#5C5220;}
+}
+:root[data-theme="dark"]{--paper:#15191B;--sheet:#1C2124;--ink:#E7ECE9;--ink2:#A3AEB4;--pen:#8FA9F0;--pen-soft:#22305A;--rule:#33403A;--rule2:#283230;--attn:#E6B25C;--attn-bg:#3A2F17;--risk:#F2839E;--risk-bg:#40202A;--mark:#5C5220;}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--ui);-webkit-text-size-adjust:100%}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 18px 120px}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:6px 0 14px;border-bottom:2px solid var(--ink)}
+.brand h1{font:700 30px/1.15 var(--doc);margin:0;letter-spacing:-.01em}
+.brand p{margin:4px 0 0;color:var(--ink2);font-size:14px}
+.top-tools{display:flex;gap:8px}
+.ghost{background:none;border:1px solid var(--rule);border-radius:6px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--ink2)}
+.ghost:hover{border-color:var(--ink2);color:var(--ink)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:28px;margin-top:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* 방문 정보: 서식 머리 */
+.form-head{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--rule);background:var(--sheet)}
+.form-head .f{padding:8px 12px;border-right:1px solid var(--rule)}
+.form-head .f:last-child{border-right:0}
+.form-head label{display:block;font-size:12.5px;color:var(--ink2)}
+.form-head input,.form-head select{width:100%;border:0;border-bottom:1px dashed var(--rule);background:transparent;padding:4px 0;font-size:16px}
+.form-head input:focus,.form-head select:focus{outline:none;border-bottom:2px solid var(--pen)}
+@media (max-width:640px){.form-head{grid-template-columns:1fr 1fr}.form-head .f:nth-child(2){border-right:0}.form-head .f:nth-child(-n+2){border-bottom:1px solid var(--rule)}}
+.saved-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 0;font-size:14px;color:var(--ink2)}
+.chip-btn{border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:14px}
+.chip-btn:hover{border-color:var(--pen);color:var(--pen)}
+.chip-btn .x{margin-left:6px;color:var(--ink2)}
+
+h2.sec{font:600 15px/1.4 var(--ui);margin:26px 0 8px;display:flex;align-items:baseline;gap:10px}
+h2.sec small{font-weight:400;color:var(--ink2);font-size:13px}
+
+/* 키워드 */
+.kw-box{background:var(--sheet);border:1px solid var(--rule);padding:12px}
+.kw-add{display:grid;grid-template-columns:minmax(0,1fr) 190px auto;gap:8px}
+@media (max-width:560px){.kw-add{grid-template-columns:1fr 1fr}.kw-add button{grid-column:1/-1}}
+.kw-add input,.kw-add select,.row select,.row input{border:1px solid var(--rule);background:var(--paper);border-radius:4px;padding:9px 10px;min-height:44px;width:100%}
+.btn{border:0;border-radius:4px;background:var(--pen);color:#fff;padding:9px 16px;min-height:44px;cursor:pointer;font-weight:500}
+.btn:hover{filter:brightness(1.08)}
+.kw-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;list-style:none;padding:0}
+.kw-list li{background:var(--mark);border-radius:2px;padding:4px 6px 4px 10px;font-size:14.5px;display:flex;align-items:center;gap:6px}
+.kw-list li span{color:var(--ink2);font-size:12.5px}
+.kw-list button{border:0;background:none;cursor:pointer;width:28px;height:28px;border-radius:4px}
+.kw-list button:hover{background:rgba(0,0,0,.08)}
+.hint{font-size:13px;color:var(--ink2);margin:8px 0 0}
+
+/* 카테고리: 장부 줄 */
+.ledger{border-top:1px solid var(--ink);list-style:none;margin:0;padding:0}
+.ledger>li{border-bottom:1px solid var(--rule)}
+.cat-btn{width:100%;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;padding:13px 4px;text-align:left;cursor:pointer;min-height:52px}
+.cat-btn:hover{background:var(--rule2)}
+.cat-btn .tw{width:14px;height:14px;border-right:2px solid var(--ink2);border-bottom:2px solid var(--ink2);transform:rotate(-45deg);transition:transform .15s;margin-left:2px}
+.cat-btn[aria-expanded="true"] .tw{transform:rotate(45deg)}
+.cat-name{font-weight:600;font-size:16.5px}
+.cat-group{display:block;font-size:12.5px;color:var(--ink2);font-weight:400}
+.tally{font-size:13px;color:var(--ink2);white-space:nowrap}
+.tally.on{color:var(--pen);font-weight:600}
+.tally .lv1{color:var(--attn)} .tally .lv2{color:var(--risk)}
+.cat-body{padding:4px 0 16px 36px}
+@media (max-width:560px){.cat-body{padding-left:0}}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 44px;gap:8px;padding:10px 0;border-top:1px dashed var(--rule)}
+.row:first-child{border-top:0}
+.row .full{grid-column:1/4}
+.row .lab{font-size:12px;color:var(--ink2);display:block;margin-bottom:2px}
+.row .del{align-self:end;height:44px;border:1px solid var(--rule);background:none;border-radius:4px;cursor:pointer;color:var(--ink2)}
+.row .del:hover{color:var(--risk);border-color:var(--risk)}
+.row.lv1 select.state{border-color:var(--attn);background:var(--attn-bg)}
+.row.lv2 select.state{border-color:var(--risk);background:var(--risk-bg)}
+@media (max-width:640px){.row{grid-template-columns:1fr 44px}.row>div{grid-column:1/2}.row .full{grid-column:1/2}.row .del{grid-row:1;grid-column:2}}
+.add-line{margin-top:6px;background:none;border:1px dashed var(--pen);color:var(--pen);border-radius:4px;padding:8px 14px;cursor:pointer;min-height:44px}
+
+/* 결과: 일지 한 장 */
+.sheet-col{position:sticky;top:calc(14px + env(safe-area-inset-top,0px))}
+@media (max-width:900px){.sheet-col{position:static}}
+.sheet{background:var(--sheet);border:1px solid var(--rule);box-shadow:4px 4px 0 var(--rule2)}
+.sheet-head{display:flex;justify-content:space-between;align-items:baseline;padding:12px 16px;border-bottom:2px solid var(--ink)}
+.sheet-head h2{font:700 19px/1.3 var(--doc);margin:0}
+.count{font-size:13px;color:var(--ink2)}
+.paper{font:400 17px/2.05 var(--doc);padding:6px 18px 18px;min-height:280px;
+ background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(2.05em - 1px),var(--rule2) calc(2.05em - 1px),var(--rule2) 2.05em);background-position:0 6px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+.paper .lead{text-decoration:underline;text-decoration-color:var(--pen);text-decoration-thickness:2px;text-underline-offset:5px}
+.paper mark{background:linear-gradient(to bottom,transparent 45%,var(--mark) 45%);color:inherit;padding:0 1px}
+.paper .empty{font:400 15px/1.7 var(--ui);color:var(--ink2);padding-top:14px;white-space:normal}
+textarea.paper{width:100%;border:0;resize:vertical;display:block;outline:none}
+.flags{padding:0 16px}
+.flag{font-size:14px;margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--risk);background:var(--risk-bg)}
+.flag.a{border-color:var(--attn);background:var(--attn-bg)}
+.sheet-tools{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--rule)}
+.sheet-tools .btn{flex:1 1 auto}
+.toggle{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink2);margin-right:auto;min-height:44px}
+.toggle input{width:18px;height:18px;accent-color:var(--pen)}
+.edited{font-size:13px;color:var(--attn);padding:0 16px 10px}
+.source{font-size:12.5px;color:var(--ink2);margin:14px 2px 0;line-height:1.6}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:6px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.jump{display:none}
+@media (max-width:900px){.jump{display:flex;position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--sheet);border-top:1px solid var(--rule);gap:10px;align-items:center;z-index:5}
+ .jump span{font-size:14px;color:var(--ink2);flex:1}}
+footer{margin-top:36px;font-size:12.5px;color:var(--ink2);border-top:1px solid var(--rule);padding-top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header class="top">
+  <div class="brand">
+   <h1>안부 기록장</h1>
+   <p>방문하고 나서 고르기만 하면, 결과 보고서 첫 문단부터 써 드립니다.</p>
+  </div>
+  <div class="top-tools">
+   <button class="ghost" id="themeBtn" type="button" aria-label="화면 밝기 바꾸기">어둡게</button>
+   <button class="ghost" id="resetBtn" type="button">새 일지</button>
+  </div>
+ </header>
+
+ <div class="grid">
+  <main>
+   <section aria-labelledby="h-info">
+    <h2 class="sec" id="h-info">방문 정보</h2>
+    <div class="form-head">
+     <div class="f"><label for="fDate">날짜</label><input id="fDate" placeholder="10월 3일"></div>
+     <div class="f"><label for="fMode">방식</label><select id="fMode"><option>방문</option><option>전화</option></select></div>
+     <div class="f"><label for="fName">어르신 호칭</label><input id="fName" placeholder="김○○ 어르신" autocomplete="off"></div>
+     <div class="f"><label for="fNext">다음 방문일</label><input id="fNext" placeholder="10월 10일"></div>
+    </div>
+    <div class="saved-row" id="savedRow"></div>
+   </section>
+
+   <section aria-labelledby="h-kw">
+    <h2 class="sec" id="h-kw">이 어르신만의 키워드 <small>문단 속에 자연스럽게 넣어 드립니다</small></h2>
+    <div class="kw-box">
+     <div class="kw-add">
+      <label class="sr" for="kwText">키워드</label>
+      <input id="kwText" placeholder="예: 손녀 결혼식, 호박죽, 무릎 파스" autocomplete="off">
+      <label class="sr" for="kwType">키워드 종류</label>
+      <select id="kwType"></select>
+      <button class="btn" id="kwAdd" type="button">넣기</button>
+     </div>
+     <ul class="kw-list" id="kwList" aria-label="넣은 키워드"></ul>
+     <p class="hint">실명·주민번호·주소 같은 개인정보는 넣지 마세요. 입력한 내용은 이 기기 안에서만 문장으로 바뀌고 어디로도 보내지 않습니다.</p>
+    </div>
+   </section>
+
+   <section aria-labelledby="h-cat">
+    <h2 class="sec" id="h-cat">오늘 살핀 것 <small>고른 것만 문장이 됩니다</small></h2>
+    <ul class="ledger" id="ledger"></ul>
+   </section>
+  </main>
+
+  <aside class="sheet-col" id="sheetCol" aria-labelledby="h-out">
+   <div class="sheet">
+    <div class="sheet-head"><h2 id="h-out">결과 문단</h2><span class="count" id="count">0자</span></div>
+    <div id="paperWrap" aria-live="polite"></div>
+    <div class="edited" id="editedNote" hidden>직접 고친 내용이 있습니다. 왼쪽에서 다시 고르면 고친 내용은 지워집니다.</div>
+    <div class="flags" id="flags"></div>
+    <div class="sheet-tools">
+     <label class="toggle"><input type="checkbox" id="split"> 영역마다 줄 바꾸기</label>
+     <button class="ghost" id="reword" type="button">표현 바꾸기</button>
+     <button class="ghost" id="editBtn" type="button">직접 고치기</button>
+     <button class="btn" id="copyBtn" type="button">문단 복사</button>
+    </div>
+   </div>
+   <p class="source">서비스 구분 출처: 보건복지부 『2026년 노인맞춤돌봄서비스 사업안내』 직접서비스(안전지원·사회참여·생활교육·일상생활지원)와 연계·특화서비스 구분. 문장은 고른 관찰만으로 만들어지며, 제출 전 실제 상황과 맞는지 꼭 읽어 보세요.</p>
+  </aside>
+ </div>
+
+ <footer>안부 기록장 v1.0.0 · 입력과 저장은 이 브라우저 안에서만 이루어집니다.</footer>
+</div>
+
+<div class="jump"><span id="jumpInfo">아직 고른 것이 없습니다</span><button class="btn" id="jumpBtn" type="button">문단 보기</button></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* 안부 기록장 — 문장 은행과 문단 조합 엔진 (v1.0.0)
+   level: 0 평소, 1 살펴볼 점, 2 위험 신호 */
+var BANK = [
+ {id:'greet', name:'안부·첫 모습', group:'안전지원 · 안부확인', subs:[
+  {name:'맞이할 때 모습', states:[
+   ['밝게 맞이하심',0,['방문하자 밝은 표정으로 맞이하심.','문을 열어 주시며 반갑게 맞아 주심.','기다리고 계셨다며 환하게 웃으며 맞이하심.']],
+   ['평소와 비슷함',0,['평소와 다름없는 모습으로 맞이하심.','평소와 비슷한 컨디션으로 보이심.']],
+   ['기운 없어 보임',1,['표정이 다소 어둡고 기운이 없어 보이심.','평소보다 목소리에 힘이 없고 움직임이 느리심.']],
+   ['한참 뒤 응답',2,['여러 차례 초인종을 누른 뒤에야 응답하셔서 안부 확인에 시간이 걸림.','방문 시 한동안 응답이 없어 이웃에게 소재를 확인함.']]],
+   talks:['왔어? 기다렸지','오늘은 좀 늦었네','어서 들어와요','아이고 반가워라','오늘 올 줄 알고 문 열어 놨어']},
+  {name:'안부 전화', states:[
+   ['바로 받으심',0,['안부 전화를 바로 받으셨고 대화가 원활함.','안부 전화에 밝은 목소리로 응답하심.']],
+   ['여러 번 걸어 연결',1,['안부 전화를 여러 차례 건 뒤에 연결됨.','처음에는 받지 않으셨으나 다시 걸어 통화가 이루어짐.']],
+   ['연결 안 됨',2,['안부 전화가 연결되지 않아 방문 또는 보호자 확인이 필요함.','여러 차례 안부 전화를 했으나 연결되지 않음.']]],
+   talks:['전화 줘서 고마워','별일 없어, 걱정 마','밭에 있느라 못 받았어','전화가 어디 있는지 한참 찾았네']}
+ ]},
+ {id:'health', name:'건강', group:'생활교육 · 신체건강', subs:[
+  {name:'무릎·허리 통증', states:[
+   ['아픈 곳 없다고 하심',0,['특별히 아픈 곳은 없다고 하심.','몸이 아픈 데는 없다고 하심.']],
+   ['평소 통증 비슷함',0,['평소 있던 무릎·허리 통증이 비슷한 정도로 이어진다고 하심.','늘 아프시던 무릎이 크게 달라지지 않았다고 하심.']],
+   ['통증 심해짐',1,['무릎·허리 통증이 지난번보다 심해졌다고 하심.','통증 때문에 앉았다 일어나기가 힘들다고 하심.']],
+   ['통증으로 거동 어려움',2,['통증이 심해 집 안에서도 거동이 어려운 상태임.','통증 때문에 화장실 이동도 힘들다고 하심.']]],
+   talks:['비 오려나, 무릎이 쑤셔','파스 붙이니까 좀 낫네','계단은 아직 무서워','이 나이에 안 아픈 데가 어디 있어']},
+  {name:'감기·몸살 증상', states:[
+   ['증상 없음',0,['감기나 몸살 증상은 없다고 하심.']],
+   ['가벼운 기침·콧물',1,['가벼운 기침과 콧물 증상이 있으심.','목이 칼칼하다며 가벼운 감기 증상을 보이심.']],
+   ['열·오한 호소',2,['열이 나고 오한이 든다고 하셔서 진료 확인이 필요함.','몸살 기운이 심해 누워 지내셨다고 하심.']]],
+   talks:['밤에 기침이 좀 나','따뜻한 물 마시고 있어','병원 갈 정도는 아니야','어제부터 으슬으슬해']},
+  {name:'혈압·혈당 관리', states:[
+   ['스스로 잘 재심',0,['혈압·혈당을 스스로 재며 관리하고 계심.','측정 기록을 보여 주시며 수치가 안정적이라고 하심.']],
+   ['측정을 거르심',1,['최근 혈압·혈당 측정을 거르고 계심.','측정기 사용이 번거롭다며 재지 않으셨다고 하심.']],
+   ['수치 높게 나옴',2,['최근 측정 수치가 평소보다 높게 나왔다고 하셔서 진료 연계가 필요함.']]],
+   talks:['요새 짜게 안 먹으려고 해','기계가 어려워서 안 쟀어','병원에서 괜찮다더라','단 거를 끊기가 힘들어']},
+  {name:'거동·걷기', states:[
+   ['혼자 잘 다니심',0,['집 안팎을 혼자서 무리 없이 다니심.','보행이 안정적이심.']],
+   ['지팡이·보조기 사용',0,['지팡이를 짚고 천천히 이동하심.','보행보조기를 이용해 이동하심.']],
+   ['걸음이 불안정함',1,['걸음이 다소 불안정해 넘어짐에 주의가 필요함.','이동 시 벽이나 가구를 짚고 다니심.']],
+   ['최근 넘어지심',2,['최근 집 안에서 넘어지셨다고 하심.','넘어진 뒤로 걷기를 두려워하심.']]],
+   talks:['조심조심 다니고 있어','지팡이 없으면 못 다녀','문턱에 걸려서 넘어질 뻔했어','다리에 힘이 빠져']},
+  {name:'보고 듣기', states:[
+   ['불편 없음',0,['보고 듣는 데 특별한 불편은 없으심.']],
+   ['잘 안 들리심',1,['말소리를 잘 듣지 못하셔서 크게 천천히 말씀드림.','보청기 없이는 대화가 어려우심.']],
+   ['잘 안 보이심',1,['글씨가 잘 안 보인다고 하심.','약 봉투 글씨를 읽기 어려워하심.']]],
+   talks:['뭐라고? 크게 말해 줘','안경을 바꿔야 하나 봐','텔레비전 소리를 키워야 들려']}
+ ]},
+ {id:'med', name:'복약·진료', group:'생활교육 · 신체건강', subs:[
+  {name:'약 드시기', states:[
+   ['잘 챙겨 드심',0,['처방받은 약을 빠짐없이 챙겨 드시고 계심.','약통에 요일별로 나누어 잘 챙겨 드심.']],
+   ['가끔 거르심',1,['약을 가끔 거르신다고 하심.','남은 약 개수로 보아 몇 차례 복용을 거르신 것으로 보임.']],
+   ['자주 거르거나 임의 중단',2,['약을 자주 거르거나 스스로 끊으셨다고 하셔서 확인이 필요함.']]],
+   talks:['먹었는지 안 먹었는지 헷갈려','아침 약은 꼭 먹어','약이 너무 많아서 귀찮아','속이 쓰려서 안 먹었어']},
+  {name:'병원 진료', states:[
+   ['정기 진료 다녀오심',0,['정기 진료를 다녀오셨다고 하심.','예약된 날짜에 병원에 다녀오심.']],
+   ['진료 예정',0,['가까운 시일에 병원 진료가 예정되어 있다고 하심.']],
+   ['진료를 미루심',1,['병원에 가야 하는데 미루고 계신다고 하심.','혼자 가기 어려워 진료를 미루고 계심.']]],
+   talks:['다음 주에 병원 가야 돼','혼자 가기가 겁나','의사가 좋아졌다더라','병원비가 걱정이야']}
+ ]},
+ {id:'meal', name:'식사·영양', group:'생활교육 · 신체건강', subs:[
+  {name:'끼니', states:[
+   ['세끼 챙겨 드심',0,['하루 세끼를 거르지 않고 챙겨 드신다고 하심.','끼니를 규칙적으로 드시고 계심.']],
+   ['하루 두 끼 정도',0,['하루 두 끼 정도 드신다고 하심.']],
+   ['끼니를 자주 거르심',1,['입맛이 없어 끼니를 자주 거르신다고 하심.','혼자 드시기 싫어 대충 때우신다고 하심.']],
+   ['거의 못 드심',2,['며칠째 식사를 거의 하지 못하셨다고 하심.']]],
+   talks:['혼자 먹으니 맛이 없어','밥은 꼬박꼬박 먹어','라면으로 때웠어','입맛이 통 없네']},
+  {name:'반찬·식재료', states:[
+   ['반찬 넉넉함',0,['냉장고에 반찬이 넉넉하게 있음.','밑반찬을 직접 만들어 두고 드심.']],
+   ['반찬 부족',1,['반찬이 부족하고 식재료가 거의 없음.','냉장고에 먹을 만한 것이 많지 않음.']],
+   ['상한 음식 있음',1,['냉장고에 오래되어 상한 음식이 있어 함께 정리함.']]],
+   talks:['딸이 반찬을 보내 줬어','김치만 있으면 돼','장 보러 가기가 힘들어','버리기 아까워서 뒀지']},
+  {name:'물 마시기', states:[
+   ['물을 잘 드심',0,['물을 자주 드신다고 하심.']],
+   ['물을 적게 드심',1,['화장실 가는 것이 번거로워 물을 적게 드신다고 하심.','하루 물 섭취가 적어 보이심.']]],
+   talks:['물 마시면 화장실 자꾸 가야 돼','보리차 끓여 놨어']}
+ ]},
+ {id:'sleep', name:'잠·생활 리듬', group:'생활교육 · 신체건강', subs:[
+  {name:'잠', states:[
+   ['잘 주무심',0,['밤에 잘 주무신다고 하심.','잠을 푹 주무셨다고 하심.']],
+   ['자주 깨심',1,['밤중에 자주 깨신다고 하심.','새벽에 일찍 깨서 다시 잠들기 어렵다고 하심.']],
+   ['며칠째 못 주무심',2,['며칠째 잠을 거의 못 주무셨다고 하심.']]],
+   talks:['새벽 세 시면 눈이 떠져','낮잠을 자서 그런가','잠이 보약이야','생각이 많아서 잠이 안 와']},
+  {name:'하루 지내는 모습', states:[
+   ['규칙적으로 지내심',0,['정해진 시간에 일어나 규칙적으로 지내고 계심.']],
+   ['주로 누워 지내심',1,['하루 대부분을 누워 지내신다고 하심.','바깥 활동 없이 집 안에서만 지내심.']]],
+   talks:['하루가 너무 길어','아침에 동네 한 바퀴 돌아','텔레비전 켜 놓고 누워 있지']}
+ ]},
+ {id:'mood', name:'마음·정서', group:'생활교육 · 정신건강', subs:[
+  {name:'기분', states:[
+   ['기분 좋으심',0,['대화 내내 기분이 좋아 보이심.','웃음이 많고 밝은 모습이심.']],
+   ['평온하심',0,['평온한 모습으로 대화하심.']],
+   ['울적해 보이심',1,['다소 울적해 보이심.','말수가 줄고 기운이 없어 보이심.']],
+   ['짜증·예민함',1,['평소보다 예민하고 짜증이 늘어 보이심.']]],
+   talks:['오늘은 기분이 좋네','그냥 그래','사는 게 다 그렇지','괜히 서글퍼']},
+  {name:'외로움', states:[
+   ['외로움 표현 없음',0,['외로움을 특별히 말씀하지 않으심.']],
+   ['외롭다고 하심',1,['혼자 지내는 것이 외롭다고 하심.','이야기할 사람이 없어 적적하다고 하심.']],
+   ['사람을 피하심',2,['사람 만나는 것을 피하고 집 밖으로 나가지 않으려 하심.']]],
+   talks:['말할 사람이 없어','자네 오는 날만 기다려','혼자가 편해','영감 생각이 나']},
+  {name:'걱정·위험 표현', states:[
+   ['걱정 표현 없음',0,['특별한 걱정은 없다고 하심.']],
+   ['걱정이 많으심',1,['자녀와 건강 문제로 걱정이 많으시다고 하심.','이런저런 걱정으로 마음이 편치 않다고 하심.']],
+   ['삶을 놓고 싶다는 표현',2,['삶을 그만두고 싶다는 뜻의 말씀을 하셔서 전담사회복지사에게 공유가 필요함.']]],
+   talks:['자식들 걱정뿐이야','빨리 가야 할 텐데','짐만 되는 것 같아','나는 괜찮아, 걱정 마']}
+ ]},
+ {id:'cog', name:'기억·인지', group:'생활교육 · 정신건강', subs:[
+  {name:'날짜·약속 기억', states:[
+   ['잘 기억하심',0,['날짜와 방문 약속을 잘 기억하고 계심.']],
+   ['가끔 깜빡하심',1,['약속이나 물건 둔 곳을 가끔 깜빡하신다고 하심.']],
+   ['날짜·장소 혼동',2,['날짜와 장소를 헷갈려 하셔서 인지 상태 확인이 필요함.']]],
+   talks:['오늘이 무슨 요일이지?','열쇠를 또 어디 뒀나','달력에 동그라미 쳐 놨어']},
+  {name:'인지활동', states:[
+   ['함께 즐겁게 참여',0,['인지활동(색칠·숫자 놀이 등)에 즐겁게 참여하심.','화투로 숫자 맞히기를 하며 집중하심.']],
+   ['참여를 어려워하심',1,['인지활동에 흥미를 보이지 않거나 어려워하심.']]],
+   talks:['이거 재밌네','머리 쓰니까 좋다','눈이 침침해서 못 하겠어']}
+ ]},
+ {id:'house', name:'위생·가사', group:'일상생활지원 · 가사지원', subs:[
+  {name:'개인위생', states:[
+   ['깔끔하심',0,['옷차림과 개인위생이 깔끔하심.']],
+   ['목욕을 미루심',1,['목욕을 한동안 하지 못하셨다고 하심.','옷을 오래 갈아입지 않으신 것으로 보임.']]],
+   talks:['혼자 씻기가 무서워','목욕탕 가고 싶다','어제 머리 감았어']},
+  {name:'집 안 청결', states:[
+   ['정돈되어 있음',0,['집 안이 깨끗하게 정돈되어 있음.']],
+   ['다소 어수선함',1,['집 안이 다소 어수선하고 정리가 필요함.']],
+   ['쓰레기·악취',2,['쓰레기가 쌓이고 냄새가 나 위생 개선이 시급함.']]],
+   talks:['허리가 아파서 못 치웠어','버릴 게 하나도 없어','어제 쓸고 닦았지']},
+  {name:'빨래·이불', states:[
+   ['잘 하고 계심',0,['빨래를 스스로 잘 하고 계심.']],
+   ['도움 필요',1,['이불 빨래 등 큰 빨래는 도움이 필요하다고 하심.']]],
+   talks:['세탁기 돌리는 게 헷갈려','이불은 무거워서 못 빨아']}
+ ]},
+ {id:'safe', name:'주거·생활안전', group:'안전지원 · 생활안전점검', subs:[
+  {name:'난방·냉방', states:[
+   ['적절함',0,['실내 온도가 적절하게 유지되고 있음.']],
+   ['난방비 아끼려 춥게 지내심',1,['난방비를 아끼려고 보일러를 거의 틀지 않으심.','실내가 다소 추워 전기장판에만 의지하고 계심.']],
+   ['더위에 노출됨',1,['실내가 덥지만 선풍기만 사용하고 계셔서 온열질환에 주의가 필요함.']]],
+   talks:['기름값이 무서워','전기장판이면 돼','여름은 선풍기로 버텨']},
+  {name:'가스·전기·화재', states:[
+   ['이상 없음',0,['가스·전기 사용에 이상이 없음을 확인함.']],
+   ['가스 불 깜빡하심',2,['가스 불을 켜 둔 채 잊으신 적이 있다고 하셔서 안전장치 확인이 필요함.']],
+   ['콘센트·전선 위험',1,['멀티탭에 전선이 많이 꽂혀 있어 화재 위험이 있음.']]],
+   talks:['냄비를 태울 뻔했어','불 끄는 건 꼭 확인해']},
+  {name:'넘어짐 위험', states:[
+   ['위험 요소 없음',0,['집 안에 넘어질 만한 위험 요소는 보이지 않음.']],
+   ['문턱·미끄러운 바닥',1,['문턱과 욕실 바닥이 미끄러워 넘어짐 위험이 있음.','밤에 화장실 가는 길이 어두움.']]],
+   talks:['욕실이 미끄러워','밤에 불 켜기가 귀찮아']},
+  {name:'응급안전장비(ICT)', states:[
+   ['정상 작동',0,['응급안전 장비가 정상 작동함을 확인함.']],
+   ['작동 이상',1,['응급안전 장비 작동에 이상이 있어 점검 요청이 필요함.']]],
+   talks:['이 기계가 자꾸 소리가 나','버튼 누르는 거 알아']}
+ ]},
+ {id:'rel', name:'가족·이웃', group:'사회참여 · 사회관계', subs:[
+  {name:'가족 연락', states:[
+   ['자주 연락함',0,['자녀와 자주 연락하며 지내신다고 하심.','가족이 최근 다녀갔다고 하심.']],
+   ['가끔 연락함',0,['가족과는 가끔 연락하신다고 하심.']],
+   ['연락이 끊김',1,['가족과 연락이 거의 끊겼다고 하심.']]],
+   talks:['아들이 전화했더라','손주가 많이 컸대','바빠서 못 오는 거지','명절에나 보지']},
+  {name:'이웃·모임', states:[
+   ['이웃과 왕래함',0,['이웃과 서로 오가며 지내신다고 하심.','이웃이 음식을 나눠 주셨다고 하심.']],
+   ['교류 적음',1,['이웃과 교류가 거의 없다고 하심.']]],
+   talks:['옆집 할머니랑 차 마셨어','성당 사람들이 왔다 갔어','동네에 아는 사람이 다 떠났어']}
+ ]},
+ {id:'out', name:'외출·여가', group:'사회참여 · 여가활동', subs:[
+  {name:'외출', states:[
+   ['자주 나가심',0,['산책이나 시장 등으로 자주 외출하신다고 하심.']],
+   ['가끔 나가심',0,['날이 좋을 때 가끔 외출하신다고 하심.']],
+   ['거의 안 나가심',1,['최근 집 밖에 거의 나가지 않으셨다고 하심.']]],
+   talks:['시장 구경 다녀왔어','추워서 못 나갔어','다리 아파서 안 나가']},
+  {name:'경로당·복지관', states:[
+   ['꾸준히 참여',0,['경로당·복지관 프로그램에 꾸준히 참여하고 계심.']],
+   ['참여를 쉬심',1,['한동안 경로당에 나가지 않으셨다고 하심.']]],
+   talks:['노래교실이 재밌어','경로당에서 점심 먹었어','거기 가도 할 게 없어']},
+  {name:'소일거리', states:[
+   ['텃밭·화분 가꾸심',0,['텃밭과 화분을 가꾸며 지내심.']],
+   ['TV·라디오',0,['텔레비전과 라디오를 즐겨 보고 들으심.']],
+   ['손뜨개·만들기',0,['손뜨개 등 손으로 하는 일을 즐기심.']]],
+   talks:['고추가 잘 열렸어','아침 드라마 꼭 봐','뜨개질하면 시간 잘 가']}
+ ]},
+ {id:'chat', name:'소소한 이야기', group:'안전지원 · 말벗', subs:[
+  {name:'날씨·계절', states:[['날씨 이야기',0,['날씨와 계절 이야기를 나눔.','요즘 날씨 이야기를 하며 대화를 시작함.']]],
+   talks:['가을이라 하늘이 높네','단풍 들 때 됐지','올해는 비가 많이 왔어','눈 오면 미끄러워서 큰일이야']},
+  {name:'옛 추억', states:[['젊은 시절 이야기',0,['젊은 시절 이야기를 즐겁게 들려주심.','옛날 고향 이야기를 하시며 추억에 잠기심.']]],
+   talks:['우리 때는 다 그렇게 살았어','시집올 때 이야기 해 줄까','고향 마을에 감나무가 많았어']},
+  {name:'음식 이야기', states:[['좋아하는 음식 이야기',0,['좋아하시는 음식 이야기를 나눔.','제철 음식 이야기를 하며 즐거워하심.']]],
+   talks:['호박죽이 먹고 싶네','옛날엔 장도 직접 담갔어','국수를 좋아해']},
+  {name:'TV·뉴스 이야기', states:[['프로그램·뉴스 이야기',0,['즐겨 보시는 프로그램과 뉴스 이야기를 나눔.']]],
+   talks:['그 드라마 주인공 불쌍하더라','뉴스 보면 세상이 무서워','노래 프로가 제일 좋아']},
+  {name:'반려동물·화초', states:[['반려동물·화초 이야기',0,['기르시는 반려동물과 화초 이야기를 나눔.']]],
+   talks:['우리 강아지가 효자야','고양이가 밥 달라고 울어','이 화분 꽃이 폈어']},
+  {name:'명절·행사', states:[['명절·가족 행사 이야기',0,['다가오는 명절과 가족 행사 이야기를 나눔.']]],
+   talks:['추석에 애들 온대','손녀 결혼식이 다음 달이야','제사 준비가 걱정이야']}
+ ]},
+ {id:'need', name:'어르신 요청', group:'연계서비스', subs:[
+  {name:'생활용품·식료품', states:[
+   ['요청 없음',0,['특별히 필요한 물품은 없다고 하심.']],
+   ['물품 지원 요청',1,['생활용품·식료품 지원을 요청하심.']]],
+   talks:['쌀이 다 떨어져 가','휴지가 필요해','다 있어, 괜찮아']},
+  {name:'집 수리', states:[['수리 요청',1,['집 안 고장 난 곳의 수리를 요청하심.','전등·수도 등 수리가 필요한 곳을 말씀하심.']]],
+   talks:['형광등이 나갔어','수도꼭지에서 물이 새','방문이 잘 안 닫혀']},
+  {name:'병원 동행', states:[['동행 요청',1,['병원 진료 동행을 요청하심.']]],
+   talks:['혼자 버스 타기가 겁나','같이 가 주면 좋겠어']},
+  {name:'서류·행정', states:[['서류 도움 요청',0,['우편물·서류를 읽고 처리하는 데 도움을 요청하심.']]],
+   talks:['이 편지가 뭔지 봐 줘','은행에서 뭐가 왔어']}
+ ]},
+ {id:'svc', name:'제공 서비스·조치', group:'직접서비스 · 연계 · 보고', subs:[
+  {name:'말벗·정서지원', states:[['말벗',0,['말벗 서비스를 제공하며 이야기를 경청함.','어르신 이야기를 충분히 들어 드리며 정서적으로 지지함.']]],
+   talks:['이야기하니 속이 시원하네','자네랑 얘기하면 좋아']},
+  {name:'생활교육', states:[
+   ['건강교육',0,['넘어짐 예방과 건강관리에 대해 안내함.','규칙적인 식사와 물 섭취의 중요성을 안내함.']],
+   ['복약 지도',0,['복약 시간과 방법을 다시 안내하고 약 달력을 함께 확인함.']],
+   ['인지활동',0,['인지활동(색칠·숫자 놀이 등)을 함께 진행함.']]],
+   talks:['알았어, 명심할게','그런 건 몰랐네']},
+  {name:'가사지원', states:[
+   ['청소·정리',0,['집 안 청소와 정리를 도와 드림.']],
+   ['식사 준비',0,['간단한 식사 준비를 도와 드림.']],
+   ['냉장고 정리',0,['냉장고를 정리하고 오래된 음식을 함께 처분함.']]],
+   talks:['덕분에 집이 훤하네','고마워서 어쩌나']},
+  {name:'외출 동행', states:[
+   ['병원 동행',0,['병원 진료에 동행함.']],
+   ['장보기 동행',0,['장보기에 동행함.']],
+   ['관공서·은행 동행',0,['관공서·은행 업무에 동행함.']]],
+   talks:['같이 가 주니 든든해']},
+  {name:'정보 제공', states:[
+   ['날씨·안전 정보',0,['한파·폭염 등 날씨와 안전 정보를 안내함.']],
+   ['복지 정보',0,['이용할 수 있는 복지 서비스 정보를 안내함.']]],
+   talks:['그런 게 있는 줄 몰랐어']},
+  {name:'연계·보고', states:[
+   ['전담사회복지사에게 보고함',0,['관찰 내용을 전담사회복지사에게 보고함.']],
+   ['보호자에게 연락함',0,['보호자에게 연락하여 상황을 공유함.']],
+   ['물품·주거 지원 연계 요청',0,['필요한 물품·주거 지원 연계를 요청함.']],
+   ['의료기관 연계 요청',0,['의료기관 진료 연계를 요청함.']],
+   ['응급 조치(119 등)',0,['응급 상황으로 판단되어 119에 신고하고 기관에 즉시 보고함.']]],
+   talks:[]}
+ ]},
+ {id:'plan', name:'다음 방문 계획', group:'계획', subs:[
+  {name:'계획', states:[
+   ['정기 방문 유지',0,['다음 정기 방문 시 오늘 살핀 내용을 다시 확인할 예정임.','정기 방문을 이어 가며 상태를 지켜볼 예정임.']],
+   ['안부 전화 늘림',0,['당분간 안부 전화 횟수를 늘려 상태를 확인할 예정임.']],
+   ['살펴볼 점 재확인',0,['다음 방문 때 오늘 살펴볼 점으로 기록한 부분을 우선 확인할 예정임.']],
+   ['사례 협의',0,['전담사회복지사와 사례 협의를 할 예정임.']],
+   ['동행 일정 확정',0,['병원·외출 동행 일정을 확정할 예정임.']]],
+   talks:[]}
+ ]}
+];
+
+var KW_TYPES = [
+ {id:'topic', label:'함께 나눈 이야깃거리', cat:'chat', v:['{k}{에} 대한 이야기를 나눔.','{k} 이야기를 꺼내시며 한참 대화를 나눔.']},
+ {id:'joy', label:'기쁜 일', cat:'mood', v:['{k}{로} 기분이 좋으시다고 하심.','{k} 소식에 무척 기뻐하심.']},
+ {id:'worry', label:'걱정거리', cat:'mood', v:['{k}{을} 걱정하심.','{k} 때문에 마음이 쓰인다고 하심.']},
+ {id:'food', label:'드신 음식', cat:'meal', v:['{k}{을} 드셨다고 하심.','최근 {k}{을} 맛있게 드셨다고 하심.']},
+ {id:'body', label:'몸 상태·쓰시는 것', cat:'health', v:['{k}에 대해 말씀하심.','{k}{을} 사용하고 계심.']},
+ {id:'need', label:'필요한 것', cat:'need', v:['{k}{이} 필요하다고 하심.','{k}{을} 요청하심.']},
+ {id:'event', label:'다가올 일정', cat:'rel', v:['{k}{이} 예정되어 있다고 하심.','곧 {k}{이} 있다고 하심.']},
+ {id:'raw', label:'문장 그대로', cat:'chat', v:['{k}']}
+];
+
+function lastHangul(s){
+ s=String(s).replace(/[\s\)\]\"'’”.!?]+$/,'');
+ var c=s.charCodeAt(s.length-1);
+ if(c>=0xAC00&&c<=0xD7A3) return (c-0xAC00)%28;
+ if(/[0-9]$/.test(s)){return {'0':21,'1':8,'2':0,'3':16,'4':0,'5':0,'6':1,'7':8,'8':8,'9':0}[s.slice(-1)];}
+ return -1;
+}
+function josa(w,t){
+ var b=lastHangul(w);
+ var pair={'을':['을','를'],'이':['이','가'],'은':['은','는'],'과':['과','와'],'로':['으로','로'],'에':['에','에']}[t];
+ if(!pair) return w;
+ if(b<0) return w+pair[0]+'('+pair[1]+')';
+ if(t==='로') return w+((b===0||b===8)?'로':'으로');
+ return w+(b===0?pair[1]:pair[0]);
+}
+function fillKw(tpl,k){
+ return tpl.replace(/\{k\}(\{(을|이|은|과|로|에)\})?/g,function(m,g,t){return t?josa(k,t):k;});
+}
+function rng(seed){var s=seed>>>0||1;return function(){s^=s<<13;s^=s>>>17;s^=s<<5;return ((s>>>0)%100000)/100000;};}
+function pick(arr,r){return arr[Math.floor(r()*arr.length)];}
+function findCat(id){for(var i=0;i<BANK.length;i++)if(BANK[i].id===id)return BANK[i];return null;}
+
+var TALK_FRAMES=['"{t}"라고 말씀하심.','"{t}"라는 말씀도 하심.','"{t}"라고 덧붙이심.'];
+var SHORT={greet:'',health:'건강 상태',med:'복약',meal:'식사',sleep:'잠',mood:'기분',cog:'기억',house:'생활 위생',safe:'주거 안전',rel:'가족·이웃 소식',out:'외출·여가',chat:'일상 이야기',need:'필요한 도움'};
+function quoteSentence(t,r){
+ t=String(t).trim().replace(/^["“”']+|["“”']+$/g,'');
+ if(!t) return '';
+ return pick(TALK_FRAMES,r).replace('{t}',t);
+}
+function tidy(s){
+ s=String(s).trim();
+ if(!s) return '';
+ if(!/[.!?。]$/.test(s)) s+='.';
+ return s;
+}
+
+/* input: {date, mode, name, rows:[{cat,sub,state,talk,memo}], kws:[{text,type}], nextDate, layout:'one'|'split', seed} */
+function compose(input){
+ var r=rng(input.seed||7);
+ var who=(input.name||'').trim()||'어르신';
+ var byCat={}, level={}, order=[], flag={};
+ (input.rows||[]).forEach(function(row){
+  var cat=findCat(row.cat); if(!cat) return;
+  var sub=cat.subs[row.sub]; if(!sub) return;
+  var st=sub.states[row.state]; if(!st) return;
+  var parts=[pick(st[2],r)];
+  if(row.talk) parts.push(quoteSentence(row.talk,r));
+  if(row.memo && row.memo.trim()) parts.push(tidy(row.memo));
+  if(!byCat[cat.id]){byCat[cat.id]=[];order.push(cat.id);level[cat.id]=0;}
+  byCat[cat.id].push(parts.filter(Boolean).join(' '));
+  level[cat.id]=Math.max(level[cat.id],st[1]);
+  if(st[1]>0){flag[cat.id]=flag[cat.id]||{1:[],2:[]};flag[cat.id][st[1]].push(st[0]);}
+ });
+ (input.kws||[]).forEach(function(kw){
+  var k=String(kw.text||'').trim(); if(!k) return;
+  var t=KW_TYPES.filter(function(x){return x.id===kw.type;})[0]||KW_TYPES[0];
+  var s=t.id==='raw'?tidy(k):fillKw(pick(t.v,r),k);
+  var cid=t.cat;
+  if(!byCat[cid]){byCat[cid]=[];order.push(cid);level[cid]=0;}
+  byCat[cid].push(s);
+ });
+ if(!order.length) return {summary:'',body:[],text:'',risk:[],attn:[]};
+
+ var bankOrder=BANK.map(function(c){return c.id;});
+ var tail=['svc','plan'];
+ var obs=order.filter(function(id){return tail.indexOf(id)<0;});
+ var risk=obs.filter(function(id){return level[id]===2;});
+ var attn=obs.filter(function(id){return level[id]===1;});
+ var calm=obs.filter(function(id){return level[id]===0;});
+ function nm(ids){return ids.map(function(id){return findCat(id).name;});}
+ function nmf(ids,lv){return ids.map(function(id){var f=flag[id]&&flag[id][lv];return findCat(id).name+(f&&f.length?'('+f.join(', ')+')':'');});}
+ function listKo(a){if(a.length<2)return a.join('');return a.slice(0,-1).join(', ')+' 및 '+a[a.length-1];}
+ calm.sort(function(a,b){return bankOrder.indexOf(a)-bankOrder.indexOf(b);});
+
+ var when=(input.date?input.date+' ':'오늘 ')+(input.mode==='전화'?'안부 전화':'방문');
+ var subj=josa(who,'은');
+ var summary;
+ if(risk.length){
+  summary=when+' 시 '+subj+' '+listKo(nmf(risk,2))+' 영역에서 위험 신호가 확인되어 신속한 확인과 조치가 필요한 상태임'+(attn.length?'. 이와 함께 '+listKo(nmf(attn,1))+' 영역도 살펴볼 필요가 있음.':'.');
+ } else if(attn.length){
+  summary=when+' 시 '+subj+' 전반적으로 일상을 유지하고 계시나, '+listKo(nmf(attn,1))+' 영역에서 살펴볼 점이 있어 지속적인 관찰이 필요함.';
+ } else {
+  var topics=calm.map(function(id){return SHORT[id];}).filter(Boolean).slice(0,3);
+  summary=when+' 시 '+subj+' 전반적으로 평소와 같이 안정된 모습이었으며'+(topics.length?', '+topics.join('·')+' 등을 살피며 안부를 확인함.':' 안부를 확인함.');
+ }
+ summary=summary.replace(/\.\./g,'.');
+
+ var connectors=['또한','한편','이 밖에'];
+ var body=[];
+ var seq=risk.concat(attn).concat(calm);
+ seq.forEach(function(id,i){
+  var txt=byCat[id].join(' ');
+  if(i>0 && i===risk.length+attn.length && calm.length && (risk.length+attn.length)) txt=pick(connectors,r)+' '+txt;
+  body.push({cat:id,name:findCat(id).name,level:level[id],text:txt});
+ });
+ tail.forEach(function(id){
+  if(byCat[id]) body.push({cat:id,name:findCat(id).name,level:0,text:byCat[id].join(' ')});
+ });
+ if(input.nextDate){
+  var nd='다음 방문은 '+input.nextDate+'에 예정되어 있음.';
+  var p=body.filter(function(b){return b.cat==='plan';})[0];
+  if(p) p.text+=' '+nd; else body.push({cat:'plan',name:'다음 방문 계획',level:0,text:nd});
+ }
+ var text = input.layout==='split'
+  ? summary+'\n\n'+body.map(function(b){return b.text;}).join('\n')
+  : summary+' '+body.map(function(b){return b.text;}).join(' ');
+ return {summary:summary,body:body,text:text,risk:nm(risk),attn:nm(attn)};
+}
+if(typeof module!=='undefined') module.exports={BANK:BANK,KW_TYPES:KW_TYPES,compose:compose,josa:josa,fillKw:fillKw};
+
+</script>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+var store={get:function(k,d){try{var v=localStorage.getItem('anbu:'+k);return v?JSON.parse(v):d;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem('anbu:'+k,JSON.stringify(v));}catch(e){}}};
+var state=store.get('draft',null)||{date:'',mode:'방문',name:'',nextDate:'',rows:[],kws:[],split:false,seed:7};
+var open={}; var edited=null; var editing=false;
+function today(){var d=new Date();return (d.getMonth()+1)+'월 '+d.getDate()+'일';}
+if(!state.date) state.date=today();
+
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('show');},1800);}
+function save(){store.set('draft',state);}
+
+/* 방문 정보 */
+[['fDate','date'],['fMode','mode'],['fName','name'],['fNext','nextDate']].forEach(function(p){
+ var el=$(p[0]); el.value=state[p[1]]||(p[1]==='mode'?'방문':'');
+ el.addEventListener('input',function(){state[p[1]]=el.value;changed();});
+});
+
+/* 저장한 어르신 */
+function people(){return store.get('people',[]);}
+function renderSaved(){
+ var list=people(), row=$('savedRow'); row.innerHTML='';
+ var lab=document.createElement('span'); lab.textContent=list.length?'저장한 어르신:':'호칭과 키워드를 저장해 두면 다음에 한 번에 불러옵니다.'; row.appendChild(lab);
+ list.forEach(function(p,i){
+  var b=document.createElement('button'); b.type='button'; b.className='chip-btn';
+  b.innerHTML=esc(p.name)+'<span class="x" aria-hidden="true">'+(p.kws.length?' · 키워드 '+p.kws.length:'')+'</span>';
+  b.setAttribute('aria-label',p.name+' 불러오기');
+  b.onclick=function(){state.name=p.name;$('fName').value=p.name;p.kws.forEach(function(k){if(!state.kws.some(function(x){return x.text===k.text;}))state.kws.push({text:k.text,type:k.type});});renderKw();changed();toast(p.name+' 불러옴');};
+  var d=document.createElement('button'); d.type='button'; d.className='chip-btn'; d.textContent='지우기'; d.setAttribute('aria-label',p.name+' 저장 지우기');
+  d.onclick=function(){if(!confirm(p.name+' 저장을 지울까요?'))return;var l=people();l.splice(i,1);store.set('people',l);renderSaved();};
+  row.appendChild(b); row.appendChild(d);
+ });
+ var s=document.createElement('button'); s.type='button'; s.className='chip-btn'; s.textContent='지금 어르신 저장';
+ s.onclick=function(){var n=(state.name||'').trim();if(!n){toast('호칭을 먼저 적어 주세요');$('fName').focus();return;}
+  var l=people().filter(function(p){return p.name!==n;});l.unshift({name:n,kws:state.kws.slice()});store.set('people',l.slice(0,30));renderSaved();toast(n+' 저장함');};
+ row.appendChild(s);
+}
+
+/* 키워드 */
+KW_TYPES.forEach(function(t){var o=document.createElement('option');o.value=t.id;o.textContent=t.label;$('kwType').appendChild(o);});
+function addKw(){var v=$('kwText').value.trim();if(!v){$('kwText').focus();return;}
+ v.split(/[,，]/).map(function(x){return x.trim();}).filter(Boolean).forEach(function(x){state.kws.push({text:x,type:$('kwType').value});});
+ $('kwText').value='';renderKw();changed();$('kwText').focus();}
+$('kwAdd').onclick=addKw;
+$('kwText').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addKw();}});
+function renderKw(){
+ var ul=$('kwList');ul.innerHTML='';
+ state.kws.forEach(function(k,i){
+  var t=KW_TYPES.filter(function(x){return x.id===k.type;})[0]||KW_TYPES[0];
+  var li=document.createElement('li');
+  li.innerHTML=esc(k.text)+' <span>'+esc(t.label)+'</span>';
+  var b=document.createElement('button');b.type='button';b.textContent='×';b.setAttribute('aria-label',k.text+' 빼기');
+  b.onclick=function(){state.kws.splice(i,1);renderKw();changed();};
+  li.appendChild(b);ul.appendChild(li);
+ });
+}
+
+/* 카테고리 장부 */
+function opt(sel,val,text){var o=document.createElement('option');o.value=val;o.textContent=text;sel.appendChild(o);return o;}
+function renderLedger(){
+ var ul=$('ledger');ul.innerHTML='';
+ BANK.forEach(function(cat){
+  var rows=state.rows.filter(function(r){return r.cat===cat.id;});
+  var li=document.createElement('li');
+  var btn=document.createElement('button');btn.type='button';btn.className='cat-btn';
+  btn.setAttribute('aria-expanded',open[cat.id]?'true':'false');btn.setAttribute('aria-controls','cb-'+cat.id);
+  var lv=0;rows.forEach(function(r){var st=cat.subs[r.sub]&&cat.subs[r.sub].states[r.state];if(st)lv=Math.max(lv,st[1]);});
+  var tally=rows.length?('<span class="tally on">'+rows.length+'줄'+(lv===2?' <span class="lv2">위험 신호</span>':lv===1?' <span class="lv1">살펴볼 점</span>':'')+'</span>'):'<span class="tally">기록 안 함</span>';
+  btn.innerHTML='<span class="tw" aria-hidden="true"></span><span><span class="cat-name">'+esc(cat.name)+'</span><span class="cat-group">'+esc(cat.group)+'</span></span>'+tally;
+  btn.onclick=function(){open[cat.id]=!open[cat.id];if(open[cat.id]&&!rows.length)addRow(cat.id,true);renderLedger();var f=document.querySelector('#cb-'+cat.id+' select');if(open[cat.id]&&f)f.focus();};
+  li.appendChild(btn);
+  if(open[cat.id]){
+   var body=document.createElement('div');body.className='cat-body';body.id='cb-'+cat.id;
+   state.rows.forEach(function(r,ri){ if(r.cat===cat.id) body.appendChild(rowEl(cat,r,ri)); });
+   var add=document.createElement('button');add.type='button';add.className='add-line';add.textContent='+ 한 줄 더 쓰기';
+   add.onclick=function(){addRow(cat.id);renderLedger();var all=document.querySelectorAll('#cb-'+cat.id+' .row');var last=all[all.length-1];if(last)last.querySelector('select').focus();};
+   body.appendChild(add);li.appendChild(body);
+  }
+  ul.appendChild(li);
+ });
+ updateJump();
+}
+function addRow(cid,silent){state.rows.push({cat:cid,sub:0,state:-1,talk:'',memo:''});if(!silent)changed();}
+var uid=0;
+function rowEl(cat,r,ri){
+ var d=document.createElement('div');d.className='row';
+ var sub=cat.subs[r.sub]||cat.subs[0]; var st=sub.states[r.state];
+ if(st&&st[1])d.classList.add('lv'+st[1]);
+ function field(label,el,cls){var w=document.createElement('div');if(cls)w.className=cls;var id='f'+(++uid);el.id=id;var l=document.createElement('label');l.className='lab';l.htmlFor=id;l.textContent=label;w.appendChild(l);w.appendChild(el);return w;}
+ var s1=document.createElement('select');cat.subs.forEach(function(s,i){opt(s1,i,s.name);});s1.value=r.sub;
+ s1.onchange=function(){r.sub=+s1.value;r.state=-1;r.talk='';changed(true);};
+ var s2=document.createElement('select');s2.className='state';opt(s2,-1,'상태 고르기');
+ sub.states.forEach(function(s,i){opt(s2,i,s[0]+(s[1]===2?' (위험)':s[1]===1?' (살펴볼 점)':''));});s2.value=r.state;
+ s2.onchange=function(){r.state=+s2.value;changed(true);};
+ var s3=document.createElement('select');opt(s3,'','말씀 없음');
+ sub.talks.forEach(function(t){opt(s3,t,'"'+t+'"');});opt(s3,'__own','직접 쓰기…');
+ var own=r.talk&&sub.talks.indexOf(r.talk)<0; s3.value=own?'__own':r.talk;
+ d.appendChild(field('세부 영역',s1));d.appendChild(field('관찰한 모습',s2));d.appendChild(field('어르신 말씀',s3));
+ var del=document.createElement('button');del.type='button';del.className='del';del.textContent='×';del.setAttribute('aria-label','이 줄 지우기');
+ del.onclick=function(){state.rows.splice(ri,1);changed(true);};d.appendChild(del);
+ var t=document.createElement('input');t.placeholder='어르신이 하신 말씀을 그대로 적기';t.value=own?r.talk:'';t.hidden=!own;
+ t.oninput=function(){r.talk=t.value;changed();};
+ var tw=field('직접 쓴 말씀',t,'full');tw.hidden=!own;d.appendChild(tw);
+ s3.onchange=function(){if(s3.value==='__own'){tw.hidden=false;t.hidden=false;r.talk=t.value;t.focus();}else{tw.hidden=true;r.talk=s3.value;}changed();};
+ var m=document.createElement('input');m.placeholder='덧붙일 관찰 (예: 오른쪽 무릎에 멍 있음)';m.value=r.memo||'';
+ m.oninput=function(){r.memo=m.value;changed();};
+ d.appendChild(field('덧붙일 관찰',m,'full'));
+ return d;
+}
+
+/* 결과 */
+function validInput(){
+ return {date:state.date,mode:state.mode,name:state.name,nextDate:state.nextDate,layout:state.split?'split':'one',seed:state.seed,kws:state.kws,
+  rows:state.rows.filter(function(r){return r.state>=0;})};
+}
+var last=null;
+function renderOut(){
+ var res=compose(validInput()); last=res;
+ var w=$('paperWrap'); w.innerHTML='';
+ $('editBtn').textContent=editing?'고치기 끝':'직접 고치기';
+ if(editing){
+  var ta=document.createElement('textarea');ta.className='paper';ta.value=edited;ta.rows=14;ta.setAttribute('aria-label','결과 문단 직접 고치기');
+  ta.oninput=function(){edited=ta.value;$('count').textContent=ta.value.length+'자';};
+  w.appendChild(ta);$('count').textContent=edited.length+'자';$('editedNote').hidden=false;
+ } else if(edited!==null){
+  var q=document.createElement('div');q.className='paper';q.textContent=edited;w.appendChild(q);
+  $('count').textContent=edited.length+'자';$('editedNote').hidden=false;
+ } else {
+  var p=document.createElement('div');p.className='paper';
+  if(!res.text){p.innerHTML='<p class="empty">왼쪽에서 오늘 살핀 영역을 열고 관찰한 모습을 고르면, 첫 문장에 오늘의 종합 판단을 두고 그 뒤에 근거와 조치가 이어지는 문단이 여기에 만들어집니다.</p>';}
+  else{
+   var html='<span class="lead">'+esc(res.summary)+'</span>'+(state.split?'\n\n':' ')+res.body.map(function(b){return esc(b.text);}).join(state.split?'\n':' ');
+   state.kws.forEach(function(k){var t=esc(k.text);if(!t)return;html=html.split(t).join('<mark>'+t+'</mark>');});
+   p.innerHTML=html;
+  }
+  w.appendChild(p);$('count').textContent=res.text.length+'자';$('editedNote').hidden=true;
+ }
+ var f=$('flags');f.innerHTML='';
+ var hasReport=state.rows.some(function(r){return r.cat==='svc'&&r.sub===5&&r.state>=0;});
+ if(res.risk.length&&!hasReport){var a=document.createElement('p');a.className='flag';a.textContent='위험 신호를 기록했습니다. 실제로 한 보고·연계가 있으면 「제공 서비스·조치」의 연계·보고에서 골라 주세요. 하지 않은 조치는 문단에 넣지 않습니다.';f.appendChild(a);}
+ else if(res.attn.length&&!state.rows.some(function(r){return r.cat==='plan'&&r.state>=0;})){var b=document.createElement('p');b.className='flag a';b.textContent='살펴볼 점이 있습니다. 「다음 방문 계획」을 고르면 문단 끝에 이어 붙습니다.';f.appendChild(b);}
+}
+function updateJump(){var n=state.rows.filter(function(r){return r.state>=0;}).length+state.kws.length;$('jumpInfo').textContent=n?('고른 내용 '+n+'개'):'아직 고른 것이 없습니다';}
+function changed(rerender){if(edited!==null&&!confirm('직접 고친 문단이 지워집니다. 계속할까요?')){renderLedger();return;}edited=null;editing=false;save();if(rerender)renderLedger();else updateJump();renderOut();}
+
+$('split').checked=!!state.split;$('split').onchange=function(){state.split=$('split').checked;changed();};
+$('reword').onclick=function(){state.seed=(state.seed*7+13)%9973+1;changed();toast('다른 표현으로 바꿈');};
+$('editBtn').onclick=function(){if(!editing){if(edited===null){if(!last||!last.text){toast('먼저 내용을 골라 주세요');return;}edited=last.text;}editing=true;renderOut();var ta=document.querySelector('#paperWrap textarea');if(ta)ta.focus();}else{editing=false;renderOut();toast('고친 문단을 보관함');}};
+$('copyBtn').onclick=function(){var txt=edited!==null?edited:(last&&last.text)||'';if(!txt){toast('복사할 문단이 없습니다');return;}
+ function ok(){toast('문단을 복사했습니다');}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,fallback);}else fallback();
+ function fallback(){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('복사하지 못했습니다. 문단을 길게 눌러 복사해 주세요');}document.body.removeChild(ta);}
+};
+$('resetBtn').onclick=function(){if(!confirm('지금 일지를 비우고 새로 시작할까요? 저장한 어르신은 그대로 남습니다.'))return;state={date:today(),mode:'방문',name:'',nextDate:'',rows:[],kws:[],split:state.split,seed:7};edited=null;editing=false;open={};
+ ['fDate','fMode','fName','fNext'].forEach(function(id){$(id).value='';});$('fDate').value=state.date;$('fMode').value='방문';save();renderKw();renderLedger();renderOut();};
+$('jumpBtn').onclick=function(){$('sheetCol').scrollIntoView({behavior:'smooth',block:'start'});};
+
+/* 화면 밝기 */
+var theme=store.get('theme','');function applyTheme(){if(theme)document.documentElement.setAttribute('data-theme',theme);else document.documentElement.removeAttribute('data-theme');
+ var dark=theme?theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;$('themeBtn').textContent=dark?'밝게':'어둡게';}
+$('themeBtn').onclick=function(){var dark=document.getElementById('themeBtn').textContent==='밝게';theme=dark?'light':'dark';store.set('theme',theme);applyTheme();};
+applyTheme();
+
+state.rows.forEach(function(r){if(r.state>=0)open[r.cat]=open[r.cat]||false;});
+renderSaved();renderKw();renderLedger();renderOut();
+})();
+</script>
+</body>
+</html>
