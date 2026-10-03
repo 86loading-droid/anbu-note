@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>안부 기록장 — 방문 일지 문단 만들기</title>
+<meta name="theme-color" content="#F4F7F3">
 <meta name="description" content="노인맞춤돌봄 방문 후 고른 내용으로 두괄식 결과 문단을 만드는 일지 도우미">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📒</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,15 +13,15 @@
 <style>
 :root{
  --paper:#F4F7F3; --sheet:#FBFCFA; --ink:#20262A; --ink2:#55606A; --pen:#2446A3; --pen-soft:#E3E9F7;
- --rule:#CCD9C8; --rule2:#E2EBDF; --attn:#9A5B00; --attn-bg:#FBF0DC; --risk:#B0234B; --risk-bg:#FBE6EC; --mark:#FFEF9A;
+ --field:#FFFFFF; --field-line:#8FA38B; --rule:#CCD9C8; --rule2:#E2EBDF; --attn:#9A5B00; --attn-bg:#FBF0DC; --risk:#B0234B; --risk-bg:#FBE6EC; --mark:#FFEF9A;
  --ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
  --doc:"Gowun Batang","AppleMyungjo","Batang","Noto Serif KR",serif;
  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
- :root:not([data-theme="light"]){--paper:#15191B;--sheet:#1C2124;--ink:#E7ECE9;--ink2:#A3AEB4;--pen:#8FA9F0;--pen-soft:#22305A;--rule:#33403A;--rule2:#283230;--attn:#E6B25C;--attn-bg:#3A2F17;--risk:#F2839E;--risk-bg:#40202A;--mark:#5C5220;}
+ :root:not([data-theme="light"]){--field:#232A2E;--field-line:#5E6E66;--paper:#15191B;--sheet:#1C2124;--ink:#E7ECE9;--ink2:#A3AEB4;--pen:#8FA9F0;--pen-soft:#22305A;--rule:#33403A;--rule2:#283230;--attn:#E6B25C;--attn-bg:#3A2F17;--risk:#F2839E;--risk-bg:#40202A;--mark:#5C5220;}
 }
-:root[data-theme="dark"]{--paper:#15191B;--sheet:#1C2124;--ink:#E7ECE9;--ink2:#A3AEB4;--pen:#8FA9F0;--pen-soft:#22305A;--rule:#33403A;--rule2:#283230;--attn:#E6B25C;--attn-bg:#3A2F17;--risk:#F2839E;--risk-bg:#40202A;--mark:#5C5220;}
+:root[data-theme="dark"]{--field:#232A2E;--field-line:#5E6E66;--paper:#15191B;--sheet:#1C2124;--ink:#E7ECE9;--ink2:#A3AEB4;--pen:#8FA9F0;--pen-soft:#22305A;--rule:#33403A;--rule2:#283230;--attn:#E6B25C;--attn-bg:#3A2F17;--risk:#F2839E;--risk-bg:#40202A;--mark:#5C5220;}
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--ui);-webkit-text-size-adjust:100%}
@@ -49,7 +50,7 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .chip-btn:hover{border-color:var(--pen);color:var(--pen)}
 .chip-btn .x{margin-left:6px;color:var(--ink2)}
 
-h2.sec{font:600 15px/1.4 var(--ui);margin:26px 0 8px;display:flex;align-items:baseline;gap:10px}
+h2.sec{font:600 16.5px/1.4 var(--ui);margin:26px 0 10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
 h2.sec small{font-weight:400;color:var(--ink2);font-size:13px}
 
 /* 키워드 */
@@ -121,6 +122,32 @@ textarea.paper{width:100%;border:0;resize:vertical;display:block;outline:none}
 footer{margin-top:36px;font-size:12.5px;color:var(--ink2);border-top:1px solid var(--rule);padding-top:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* v1.1 휴대폰 우선: 큰 입력칸 */
+body{font-size:17px}
+.wrap{padding:16px 14px 120px}
+.brand h1{font-size:27px}
+.form-head{display:grid;grid-template-columns:1fr;gap:16px;border:0;background:none}
+@media (min-width:901px){.form-head{grid-template-columns:1fr 1fr}}
+.form-head .f{border:0!important;padding:0}
+.form-head label,.fld-lab{display:block;font-size:15.5px;font-weight:600;color:var(--ink);margin:0 0 6px}
+.form-head input,.form-head select,.kw-add input,.kw-add select,.row select,.row input,textarea.paper{font-size:18px;min-height:56px;padding:12px 14px;border:2px solid var(--field-line);border-radius:10px;background:var(--field);color:var(--ink)}
+.form-head input:focus,.form-head select:focus,.kw-add input:focus,.kw-add select:focus,.row select:focus,.row input:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 4px var(--pen-soft)}
+.row .lab{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.btn,.ghost,.add-line{min-height:52px;font-size:16.5px}
+.kw-add{grid-template-columns:1fr}
+@media (min-width:901px){.kw-add{grid-template-columns:minmax(0,1fr) 210px auto}}
+.with-btn{display:flex;gap:8px}
+.with-btn input{flex:1;min-width:0}
+.with-btn .ghost{white-space:nowrap;padding:0 14px;border:2px solid var(--field-line);border-radius:10px;color:var(--ink)}
+.names{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.names button.pick{border:2px solid var(--field-line);background:var(--field);border-radius:999px;padding:8px 16px;min-height:44px;font-size:16px;cursor:pointer}
+.names button.pick[aria-pressed="true"]{border-color:var(--pen);background:var(--pen-soft);color:var(--pen);font-weight:600}
+.etc{margin-top:34px;border-top:2px solid var(--ink);padding-top:12px}
+.etc h2{font:600 15px/1.4 var(--ui);margin:0 0 8px}
+.etc p{font-size:14px;color:var(--ink2);margin:0 0 10px;line-height:1.65}
+.etc .tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.etc .saved-list{display:flex;flex-wrap:wrap;gap:8px}
+.etc .saved-list button{border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:6px 12px;min-height:40px;cursor:pointer;font-size:14.5px}
 </style>
 </head>
 <body>
@@ -130,10 +157,6 @@ footer{margin-top:36px;font-size:12.5px;color:var(--ink2);border-top:1px solid v
    <h1>안부 기록장</h1>
    <p>방문하고 나서 고르기만 하면, 결과 보고서 첫 문단부터 써 드립니다.</p>
   </div>
-  <div class="top-tools">
-   <button class="ghost" id="themeBtn" type="button" aria-label="화면 밝기 바꾸기">어둡게</button>
-   <button class="ghost" id="resetBtn" type="button">새 일지</button>
-  </div>
  </header>
 
  <div class="grid">
@@ -141,12 +164,12 @@ footer{margin-top:36px;font-size:12.5px;color:var(--ink2);border-top:1px solid v
    <section aria-labelledby="h-info">
     <h2 class="sec" id="h-info">방문 정보</h2>
     <div class="form-head">
-     <div class="f"><label for="fDate">날짜</label><input id="fDate" placeholder="10월 3일"></div>
+     <div class="f"><label for="fDate">방문 날짜</label><div class="with-btn"><input id="fDate" type="date"><button class="ghost" id="todayBtn" type="button">오늘</button></div></div>
+     <div class="f"><label for="fName">어르신 호칭</label><input id="fName" placeholder="예: 김○○ 어르신" autocomplete="off" enterkeyhint="done">
+      <div class="names" id="names" aria-label="저장된 어르신"></div></div>
      <div class="f"><label for="fMode">방식</label><select id="fMode"><option>방문</option><option>전화</option></select></div>
-     <div class="f"><label for="fName">어르신 호칭</label><input id="fName" placeholder="김○○ 어르신" autocomplete="off"></div>
-     <div class="f"><label for="fNext">다음 방문일</label><input id="fNext" placeholder="10월 10일"></div>
+     <div class="f"><label for="fNext">다음 방문일</label><div class="with-btn"><input id="fNext" type="date"><button class="ghost" id="weekBtn" type="button">일주일 뒤</button></div></div>
     </div>
-    <div class="saved-row" id="savedRow"></div>
    </section>
 
    <section aria-labelledby="h-kw">
@@ -160,7 +183,6 @@ footer{margin-top:36px;font-size:12.5px;color:var(--ink2);border-top:1px solid v
       <button class="btn" id="kwAdd" type="button">넣기</button>
      </div>
      <ul class="kw-list" id="kwList" aria-label="넣은 키워드"></ul>
-     <p class="hint">실명·주민번호·주소 같은 개인정보는 넣지 마세요. 입력한 내용은 이 기기 안에서만 문장으로 바뀌고 어디로도 보내지 않습니다.</p>
     </div>
    </section>
 
@@ -183,11 +205,18 @@ footer{margin-top:36px;font-size:12.5px;color:var(--ink2);border-top:1px solid v
      <button class="btn" id="copyBtn" type="button">문단 복사</button>
     </div>
    </div>
-   <p class="source">서비스 구분 출처: 보건복지부 『2026년 노인맞춤돌봄서비스 사업안내』 직접서비스(안전지원·사회참여·생활교육·일상생활지원)와 연계·특화서비스 구분. 문장은 고른 관찰만으로 만들어지며, 제출 전 실제 상황과 맞는지 꼭 읽어 보세요.</p>
   </aside>
  </div>
 
- <footer>안부 기록장 v1.0.0 · 입력과 저장은 이 브라우저 안에서만 이루어집니다.</footer>
+ <section class="etc" aria-labelledby="h-etc">
+  <h2 id="h-etc">기타</h2>
+  <p>실명·주민번호·주소 같은 개인정보는 넣지 마세요. 입력한 내용은 이 휴대폰(브라우저) 안에서만 문장으로 바뀌고 어디로도 보내지 않습니다.</p>
+  <p>서비스 구분 출처: 보건복지부 『2026년 노인맞춤돌봄서비스 사업안내』 직접서비스(안전지원·사회참여·생활교육·일상생활지원)와 연계·특화서비스 구분. 문장은 고른 관찰만으로 만들어지며, 제출 전 실제 상황과 맞는지 꼭 읽어 보세요.</p>
+  <div class="tools"><button class="ghost" id="resetBtn" type="button">새 일지 시작</button><button class="ghost" id="themeBtn" type="button" aria-label="화면 밝기 바꾸기">어둡게</button></div>
+  <p>저장된 어르신 지우기 (누르면 지울지 묻습니다)</p>
+  <div class="saved-list" id="savedList"></div>
+  <p style="margin-top:14px">안부 기록장 v1.1.0</p>
+ </section>
 </div>
 
 <div class="jump"><span id="jumpInfo">아직 고른 것이 없습니다</span><button class="btn" id="jumpBtn" type="button">문단 보기</button></div>
@@ -565,8 +594,12 @@ var $=function(id){return document.getElementById(id);};
 var store={get:function(k,d){try{var v=localStorage.getItem('anbu:'+k);return v?JSON.parse(v):d;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem('anbu:'+k,JSON.stringify(v));}catch(e){}}};
 var state=store.get('draft',null)||{date:'',mode:'방문',name:'',nextDate:'',rows:[],kws:[],split:false,seed:7};
 var open={}; var edited=null; var editing=false;
-function today(){var d=new Date();return (d.getMonth()+1)+'월 '+d.getDate()+'일';}
-if(!state.date) state.date=today();
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function today(){return iso(new Date());}
+function ko(v){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?(+m[2])+'월 '+(+m[3])+'일':(v||'');}
+state.date=today();
+if(!/^\d{4}-/.test(state.nextDate||''))state.nextDate='';
+if(!state.name)state.name=store.get('lastName','');
 
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('show');},1800);}
@@ -578,25 +611,32 @@ function save(){store.set('draft',state);}
  el.addEventListener('input',function(){state[p[1]]=el.value;changed();});
 });
 
-/* 저장한 어르신 */
+/* 저장한 어르신: 호칭을 한 번 쓰면 자동 저장 */
 function people(){return store.get('people',[]);}
-function renderSaved(){
- var list=people(), row=$('savedRow'); row.innerHTML='';
- var lab=document.createElement('span'); lab.textContent=list.length?'저장한 어르신:':'호칭과 키워드를 저장해 두면 다음에 한 번에 불러옵니다.'; row.appendChild(lab);
- list.forEach(function(p,i){
-  var b=document.createElement('button'); b.type='button'; b.className='chip-btn';
-  b.innerHTML=esc(p.name)+'<span class="x" aria-hidden="true">'+(p.kws.length?' · 키워드 '+p.kws.length:'')+'</span>';
-  b.setAttribute('aria-label',p.name+' 불러오기');
-  b.onclick=function(){state.name=p.name;$('fName').value=p.name;p.kws.forEach(function(k){if(!state.kws.some(function(x){return x.text===k.text;}))state.kws.push({text:k.text,type:k.type});});renderKw();changed();toast(p.name+' 불러옴');};
-  var d=document.createElement('button'); d.type='button'; d.className='chip-btn'; d.textContent='지우기'; d.setAttribute('aria-label',p.name+' 저장 지우기');
-  d.onclick=function(){if(!confirm(p.name+' 저장을 지울까요?'))return;var l=people();l.splice(i,1);store.set('people',l);renderSaved();};
-  row.appendChild(b); row.appendChild(d);
- });
- var s=document.createElement('button'); s.type='button'; s.className='chip-btn'; s.textContent='지금 어르신 저장';
- s.onclick=function(){var n=(state.name||'').trim();if(!n){toast('호칭을 먼저 적어 주세요');$('fName').focus();return;}
-  var l=people().filter(function(p){return p.name!==n;});l.unshift({name:n,kws:state.kws.slice()});store.set('people',l.slice(0,30));renderSaved();toast(n+' 저장함');};
- row.appendChild(s);
+var owner=(state.name||'').trim();
+function rememberName(){var n=(state.name||'').trim();if(!n)return;
+ var ex=people().filter(function(p){return p.name===n;})[0];
+ if(ex&&n!==owner){loadPerson(ex);return;}
+ if(!ex&&owner&&owner!==n&&state.kws.length){state.kws=[];renderKw();renderOut();}
+ owner=n;
+ var l=people(),cur=l.filter(function(p){return p.name===n;})[0];
+ l=l.filter(function(p){return p.name!==n;});l.unshift({name:n,kws:state.kws.slice()});
+ store.set('people',l.slice(0,40));store.set('lastName',n);if(!cur)renderSaved();else renderNames();}
+function loadPerson(p){owner=p.name;state.name=p.name;$('fName').value=p.name;state.kws=p.kws.map(function(k){return {text:k.text,type:k.type};});store.set('lastName',p.name);renderKw();changed();renderNames();toast(p.name+' 불러옴');}
+function renderNames(){
+ var box=$('names');box.innerHTML='';
+ people().forEach(function(p){var b=document.createElement('button');b.type='button';b.className='pick';b.textContent=p.name;
+  b.setAttribute('aria-pressed',p.name===(state.name||'').trim()?'true':'false');b.onclick=function(){loadPerson(p);};box.appendChild(b);});
 }
+function renderSaved(){
+ renderNames();
+ var box=$('savedList');box.innerHTML='';
+ var list=people();if(!list.length){box.textContent='아직 저장된 어르신이 없습니다.';return;}
+ list.forEach(function(p,i){var d=document.createElement('button');d.type='button';d.textContent=p.name+' 지우기';
+  d.onclick=function(){if(!confirm(p.name+' 저장을 지울까요?'))return;var l=people();l.splice(i,1);store.set('people',l);if(store.get('lastName','')===p.name)store.set('lastName','');renderSaved();};box.appendChild(d);});
+}
+$('fName').addEventListener('change',rememberName);
+$('fName').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();rememberName();$('fName').blur();}});
 
 /* 키워드 */
 KW_TYPES.forEach(function(t){var o=document.createElement('option');o.value=t.id;o.textContent=t.label;$('kwType').appendChild(o);});
@@ -672,7 +712,7 @@ function rowEl(cat,r,ri){
 
 /* 결과 */
 function validInput(){
- return {date:state.date,mode:state.mode,name:state.name,nextDate:state.nextDate,layout:state.split?'split':'one',seed:state.seed,kws:state.kws,
+ return {date:ko(state.date),mode:state.mode,name:state.name,nextDate:ko(state.nextDate),layout:state.split?'split':'one',seed:state.seed,kws:state.kws,
   rows:state.rows.filter(function(r){return r.state>=0;})};
 }
 var last=null;
@@ -703,7 +743,8 @@ function renderOut(){
  else if(res.attn.length&&!state.rows.some(function(r){return r.cat==='plan'&&r.state>=0;})){var b=document.createElement('p');b.className='flag a';b.textContent='살펴볼 점이 있습니다. 「다음 방문 계획」을 고르면 문단 끝에 이어 붙습니다.';f.appendChild(b);}
 }
 function updateJump(){var n=state.rows.filter(function(r){return r.state>=0;}).length+state.kws.length;$('jumpInfo').textContent=n?('고른 내용 '+n+'개'):'아직 고른 것이 없습니다';}
-function changed(rerender){if(edited!==null&&!confirm('직접 고친 문단이 지워집니다. 계속할까요?')){renderLedger();return;}edited=null;editing=false;save();if(rerender)renderLedger();else updateJump();renderOut();}
+function changed(rerender){if(edited!==null&&!confirm('직접 고친 문단이 지워집니다. 계속할까요?')){renderLedger();return;}edited=null;editing=false;save();
+ if((state.name||'').trim()&&people().some(function(p){return p.name===state.name.trim();})){var l=people();l.forEach(function(p){if(p.name===state.name.trim())p.kws=state.kws.slice();});store.set('people',l);}if(rerender)renderLedger();else updateJump();renderOut();}
 
 $('split').checked=!!state.split;$('split').onchange=function(){state.split=$('split').checked;changed();};
 $('reword').onclick=function(){state.seed=(state.seed*7+13)%9973+1;changed();toast('다른 표현으로 바꿈');};
@@ -713,8 +754,11 @@ $('copyBtn').onclick=function(){var txt=edited!==null?edited:(last&&last.text)||
  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,fallback);}else fallback();
  function fallback(){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('복사하지 못했습니다. 문단을 길게 눌러 복사해 주세요');}document.body.removeChild(ta);}
 };
-$('resetBtn').onclick=function(){if(!confirm('지금 일지를 비우고 새로 시작할까요? 저장한 어르신은 그대로 남습니다.'))return;state={date:today(),mode:'방문',name:'',nextDate:'',rows:[],kws:[],split:state.split,seed:7};edited=null;editing=false;open={};
- ['fDate','fMode','fName','fNext'].forEach(function(id){$(id).value='';});$('fDate').value=state.date;$('fMode').value='방문';save();renderKw();renderLedger();renderOut();};
+$('resetBtn').onclick=function(){if(!confirm('지금 일지를 비우고 새로 시작할까요? 저장된 어르신은 그대로 남습니다.'))return;state={date:today(),mode:'방문',name:'',nextDate:'',rows:[],kws:[],split:state.split,seed:7};edited=null;editing=false;open={};
+ ['fDate','fMode','fName','fNext'].forEach(function(id){$(id).value='';});$('fDate').value=state.date;$('fMode').value='방문';save();renderKw();renderNames();renderLedger();renderOut();window.scrollTo(0,0);};
+$('todayBtn').onclick=function(){state.date=today();$('fDate').value=state.date;changed();};
+$('weekBtn').onclick=function(){var d=new Date($('fDate').value||today());d.setDate(d.getDate()+7);state.nextDate=iso(d);$('fNext').value=state.nextDate;changed();};
+$('fNext').min=today();
 $('jumpBtn').onclick=function(){$('sheetCol').scrollIntoView({behavior:'smooth',block:'start'});};
 
 /* 화면 밝기 */
