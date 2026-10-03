@@ -141,6 +141,10 @@ body{font-size:17px}
 .with-btn .ghost{white-space:nowrap;padding:0 14px;border:2px solid var(--field-line);border-radius:10px;color:var(--ink)}
 .names{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .names button.pick{border:2px solid var(--field-line);background:var(--field);border-radius:999px;padding:8px 16px;min-height:44px;font-size:16px;cursor:pointer}
+.names .nm{display:inline-flex;align-items:stretch}
+.names .nm button.pick{border-radius:999px 0 0 999px;border-right:0}
+.names .nm button.x{border:2px solid var(--field-line);background:var(--field);border-radius:0 999px 999px 0;min-width:44px;min-height:44px;font-size:20px;line-height:1;color:var(--ink2);cursor:pointer}
+.names .nm button.x:hover,.names .nm button.x:focus-visible{color:var(--risk);border-color:var(--risk)}
 .names button.pick[aria-pressed="true"]{border-color:var(--pen);background:var(--pen-soft);color:var(--pen);font-weight:600}
 .etc{margin-top:34px;border-top:2px solid var(--ink);padding-top:12px}
 .etc h2{font:600 15px/1.4 var(--ui);margin:0 0 8px}
@@ -213,9 +217,9 @@ body{font-size:17px}
   <p>실명·주민번호·주소 같은 개인정보는 넣지 마세요. 입력한 내용은 이 휴대폰(브라우저) 안에서만 문장으로 바뀌고 어디로도 보내지 않습니다.</p>
   <p>서비스 구분 출처: 보건복지부 『2026년 노인맞춤돌봄서비스 사업안내』 직접서비스(안전지원·사회참여·생활교육·일상생활지원)와 연계·특화서비스 구분. 문장은 고른 관찰만으로 만들어지며, 제출 전 실제 상황과 맞는지 꼭 읽어 보세요.</p>
   <div class="tools"><button class="ghost" id="resetBtn" type="button">새 일지 시작</button><button class="ghost" id="themeBtn" type="button" aria-label="화면 밝기 바꾸기">어둡게</button></div>
-  <p>저장된 어르신 지우기 (누르면 지울지 묻습니다)</p>
+  <p>저장된 어르신 지우기 (호칭 단추 옆 × 로도 지울 수 있습니다)</p>
   <div class="saved-list" id="savedList"></div>
-  <p style="margin-top:14px">안부 기록장 v1.1.0</p>
+  <p style="margin-top:14px">안부 기록장 v1.2.0</p>
  </section>
 </div>
 
@@ -623,17 +627,28 @@ function rememberName(){var n=(state.name||'').trim();if(!n)return;
  l=l.filter(function(p){return p.name!==n;});l.unshift({name:n,kws:state.kws.slice()});
  store.set('people',l.slice(0,40));store.set('lastName',n);if(!cur)renderSaved();else renderNames();}
 function loadPerson(p){owner=p.name;state.name=p.name;$('fName').value=p.name;state.kws=p.kws.map(function(k){return {text:k.text,type:k.type};});store.set('lastName',p.name);renderKw();changed();renderNames();toast(p.name+' 불러옴');}
+function removePerson(name){
+ if(!confirm(name+'을(를) 저장 목록에서 지울까요?'))return;
+ store.set('people',people().filter(function(p){return p.name!==name;}));
+ if(store.get('lastName','')===name)store.set('lastName','');
+ if((state.name||'').trim()===name){state.name='';$('fName').value='';state.kws=[];owner='';renderKw();changed();}
+ renderSaved();toast(name+' 지움');
+}
 function renderNames(){
  var box=$('names');box.innerHTML='';
- people().forEach(function(p){var b=document.createElement('button');b.type='button';b.className='pick';b.textContent=p.name;
-  b.setAttribute('aria-pressed',p.name===(state.name||'').trim()?'true':'false');b.onclick=function(){loadPerson(p);};box.appendChild(b);});
+ people().forEach(function(p){var w=document.createElement('span');w.className='nm';
+  var b=document.createElement('button');b.type='button';b.className='pick';b.textContent=p.name;
+  b.setAttribute('aria-pressed',p.name===(state.name||'').trim()?'true':'false');b.onclick=function(){loadPerson(p);};
+  var x=document.createElement('button');x.type='button';x.className='x';x.textContent='×';x.setAttribute('aria-label',p.name+' 지우기');
+  x.onclick=function(){removePerson(p.name);};
+  w.appendChild(b);w.appendChild(x);box.appendChild(w);});
 }
 function renderSaved(){
  renderNames();
  var box=$('savedList');box.innerHTML='';
  var list=people();if(!list.length){box.textContent='아직 저장된 어르신이 없습니다.';return;}
  list.forEach(function(p,i){var d=document.createElement('button');d.type='button';d.textContent=p.name+' 지우기';
-  d.onclick=function(){if(!confirm(p.name+' 저장을 지울까요?'))return;var l=people();l.splice(i,1);store.set('people',l);if(store.get('lastName','')===p.name)store.set('lastName','');renderSaved();};box.appendChild(d);});
+  d.onclick=function(){removePerson(p.name);};box.appendChild(d);});
 }
 $('fName').addEventListener('change',rememberName);
 $('fName').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();rememberName();$('fName').blur();}});
